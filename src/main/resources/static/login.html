@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Management Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .login-box {
+            background: white;
+            padding: 30px;
+            width: 320px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px #0002;
+        }
+        h2 {
+            text-align: center;
+            color: #243b64;
+        }
+        input {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            background: #243b64;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .error {
+            color: red;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>Company Login</h2>
+
+        <p id="error" class="error" hidden>
+            Invalid username or password
+        </p>
+
+        <form action="/login" method="post">
+            <input type="text" name="username"
+                   placeholder="Username" required>
+
+            <input type="password" name="password"
+                   placeholder="Password" required>
+
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <script>
+        if (new URLSearchParams(location.search).has("error")) {
+            document.getElementById("error").hidden = false;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .admin-container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 18px;
+            margin: 25px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 22px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px #00000018;
+            text-align: center;
+        }
+
+        .stat-card h2 {
+            color: #1769aa;
+            font-size: 30px;
+            margin: 10px 0;
+        }
+
+        .dashboard-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .dashboard-links a {
+            display: inline-block;
+            padding: 11px 16px;
+            background: #1769aa;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            margin: 15px 0 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #1769aa;
+            color: white;
+        }
+
+        #message {
+            margin: 12px 0;
+            font-weight: bold;
+        }
+
+        .user-form {
+            display: grid;
+            gap: 12px;
+            margin: 15px 0 30px;
+        }
+
+        .user-form input,
+        .user-form select {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        .user-form button {
+            padding: 12px;
+            background: #1769aa;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="admin-container">
+
+    <h1>Admin Dashboard</h1>
+    <p>Company overview and management.</p>
+
+    <div class="dashboard-links">
+        <a href="employees.html">Employee Management</a>
+        <a href="manager-dashboard.html">Manager Dashboard</a>
+        <a href="employee-dashboard.html">Employee Dashboard</a>
+        <a href="task.html">Task Management</a>
+    </div>
+
+    <p id="message"></p>
+
+    <!-- Company Overview -->
+    <h2>Company Overview</h2>
+
+    <div class="cards">
+
+        <div class="stat-card">
+            <p>Total Employees</p>
+            <h2 id="employeeCount">0</h2>
+        </div>
+
+        <div class="stat-card">
+            <p>Total Tasks</p>
+            <h2 id="taskCount">0</h2>
+        </div>
+
+        <div class="stat-card">
+            <p>Pending Tasks</p>
+            <h2 id="pendingCount">0</h2>
+        </div>
+
+        <div class="stat-card">
+            <p>Completed Tasks</p>
+            <h2 id="completedCount">0</h2>
+        </div>
+
+    </div>
+
+
+    <!-- User Management -->
+    <h2>User Management</h2>
+
+    <h3>Create New User</h3>
+
+    <form class="user-form" id="userForm">
+
+        <input
+            id="username"
+            type="text"
+            placeholder="Username"
+            required
+        >
+
+        <input
+            id="password"
+            type="password"
+            placeholder="Password"
+            required
+        >
+
+        <select id="role" required>
+            <option value="">Select Role</option>
+            <option value="MANAGER">Manager</option>
+            <option value="EMPLOYEE">Employee</option>
+        </select>
+
+        <input
+            id="employeeId"
+            type="number"
+            placeholder="Employee ID (optional)"
+        >
+
+        <button type="submit">
+            Create User
+        </button>
+
+    </form>
+
+
+    <!-- All Users -->
+    <h3>All Users</h3>
+
+    <div class="table-wrap">
+        <table>
+
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Employee ID</th>
+            <th>Status</th>
+            <th>Action</th>
+            
+        </tr>
+    </thead>
+
+    <tbody id="userTable"></tbody>
+
+</table>
+    </div>
+
+
+    <!-- All Employees -->
+    <h2>All Employees</h2>
+
+    <div class="table-wrap">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Designation</th>
+                </tr>
+            </thead>
+
+            <tbody id="employeeTable"></tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- All Tasks -->
+    <h2>All Tasks</h2>
+
+    <div class="table-wrap">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Employee ID</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="taskTable"></tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    const message = document.getElementById("message");
+    const userForm = document.getElementById("userForm");
+
+
+    // Load company dashboard
+    async function loadDashboard() {
+
+        try {
+
+            const [employeeResponse, taskResponse] =
+                await Promise.all([
+                    fetch("/api/employees"),
+                    fetch("/api/tasks")
+                ]);
+
+            if (!employeeResponse.ok || !taskResponse.ok) {
+                throw new Error("Could not load dashboard data.");
+            }
+
+            const employees = await employeeResponse.json();
+            const tasks = await taskResponse.json();
+
+
+            document.getElementById("employeeCount").textContent =
+                employees.length;
+
+            document.getElementById("taskCount").textContent =
+                tasks.length;
+
+            document.getElementById("pendingCount").textContent =
+                tasks.filter(t => t.status === "PENDING").length;
+
+            document.getElementById("completedCount").textContent =
+                tasks.filter(t => t.status === "COMPLETED").length;
+
+
+            // Employees
+            const employeeTable =
+                document.getElementById("employeeTable");
+
+            employeeTable.innerHTML = "";
+
+            employees.forEach(emp => {
+
+                const row = document.createElement("tr");
+
+                [
+                    emp.id,
+                    emp.name,
+                    emp.email,
+                    emp.department,
+                    emp.designation
+                ].forEach(value => {
+
+                    const cell = document.createElement("td");
+
+                    cell.textContent = value ?? "";
+
+                    row.appendChild(cell);
+                });
+
+                employeeTable.appendChild(row);
+            });
+
+
+            // Tasks
+            const taskTable =
+                document.getElementById("taskTable");
+
+            taskTable.innerHTML = "";
+
+            tasks.forEach(task => {
+
+                const row = document.createElement("tr");
+
+                [
+                    task.id,
+                    task.title,
+                    task.employeeId,
+                    task.status
+                ].forEach(value => {
+
+                    const cell = document.createElement("td");
+
+                    cell.textContent = value ?? "";
+
+                    row.appendChild(cell);
+                });
+
+                taskTable.appendChild(row);
+            });
+
+        } catch (error) {
+
+            message.textContent = error.message;
+
+        }
+    }
+
+
+    // Load users
+     async function loadUsers() {
+
+    try {
+
+        const response = await fetch("/api/users");
+
+        if (!response.ok) {
+            throw new Error("Could not load users.");
+        }
+
+        const users = await response.json();
+
+        const userTable =
+            document.getElementById("userTable");
+
+        userTable.innerHTML = "";
+
+        users.forEach(user => {
+
+            const row = document.createElement("tr");
+
+            
+           [
+              user.id,
+              user.username,
+              user.role,
+              user.employeeId,
+              user.active ? "ACTIVE" : "INACTIVE"
+           ].forEach(value => {
+
+                const cell = document.createElement("td");
+
+                cell.textContent = value ?? "";
+
+                row.appendChild(cell);
+            });
+
+            // Action column
+            const actionCell = document.createElement("td");
+
+            const editButton = document.createElement("button");
+
+            editButton.textContent = "Edit";
+
+            editButton.onclick = function () {
+                editUser(user);
+            };
+
+            actionCell.appendChild(editButton);
+            //activate deactivate button
+            const statusButton = document.createElement("button");
+
+          statusButton.textContent =
+               user.active ? "Deactivate" : "Activate";
+
+           statusButton.onclick = function () {
+               toggleUserStatus(user);
+};
+
+actionCell.appendChild(statusButton);
+
+            row.appendChild(actionCell);
+
+            userTable.appendChild(row);
+        });
+
+    } catch (error) {
+
+        message.textContent = error.message;
+
+    }
+}
+
+
+    // Create new user
+    userForm.addEventListener("submit", async (event) => {
+
+        event.preventDefault();
+
+        const employeeIdValue =
+            document.getElementById("employeeId").value.trim();
+
+
+        const user = {
+
+            username:
+                document.getElementById("username").value.trim(),
+
+            password:
+                document.getElementById("password").value,
+
+            role:
+                document.getElementById("role").value,
+
+            employeeId:
+                employeeIdValue === ""
+                    ? null
+                    : Number(employeeIdValue)
+        };
+
+
+        try {
+
+            const response = await fetch("/api/users", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(user)
+
+            });
+
+
+            if (!response.ok) {
+
+                const errorText = await response.text();
+
+                throw new Error(
+                    errorText || "Could not create user."
+                );
+            }
+
+
+            message.textContent =
+                "User created successfully!";
+
+            userForm.reset();
+
+            await loadUsers();
+
+        } catch (error) {
+
+            message.textContent =
+                error.message;
+        }
+
+    });
+
+
+    // Start dashboard
+    async function init() {
+
+        await loadDashboard();
+
+        await loadUsers();
+
+    }
+
+    init();
+    async function editUser(user) {
+
+    const newUsername = prompt(
+        "Enter new username:",
+        user.username
+    );
+
+    if (newUsername === null) {
+        return;
+    }
+
+    const newRole = prompt(
+        "Enter role (ADMIN, MANAGER, EMPLOYEE):",
+        user.role
+    );
+
+    if (newRole === null) {
+        return;
+    }
+
+    const newEmployeeId = prompt(
+        "Enter Employee ID (leave blank if not needed):",
+        user.employeeId ?? ""
+    );
+
+    if (newEmployeeId === null) {
+        return;
+    }
+
+    const newPassword = prompt(
+        "Enter new password (leave blank to keep current password):"
+    );
+
+    const updatedUser = {
+        username: newUsername,
+        role: newRole.toUpperCase(),
+        employeeId: newEmployeeId === ""
+            ? null
+            : Number(newEmployeeId),
+        password: newPassword
+    };
+
+    try {
+
+        const response = await fetch(
+            `/api/users/${user.id}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(updatedUser)
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Could not update user.");
+        }
+
+        alert("User updated successfully!");
+
+        loadUsers();
+
+    } catch (error) {
+
+        alert(error.message);
+
+    }
+}
+async function toggleUserStatus(user) {
+
+    const action = user.active
+        ? "deactivate"
+        : "activate";
+
+    const confirmAction = confirm(
+        `Are you sure you want to ${action} user "${user.username}"?`
+    );
+
+    if (!confirmAction) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            `/api/users/${user.id}/status`,
+            {
+                method: "PUT"
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Could not update user status.");
+        }
+
+        alert(
+            user.active
+                ? "User deactivated successfully!"
+                : "User activated successfully!"
+        );
+
+        loadUsers();
+
+    } catch (error) {
+
+        alert(error.message);
+
+    }
+}
+
+</script>
+
+</body>
+</html>

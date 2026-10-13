@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .manager-container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .dashboard-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .dashboard-links a {
+            display: inline-block;
+            padding: 10px 16px;
+            background: #1769aa;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            margin: 15px 0 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #1769aa;
+            color: white;
+        }
+
+        .task-form {
+            display: grid;
+            gap: 12px;
+            margin: 15px 0;
+        }
+
+        .task-form input,
+        .task-form textarea,
+        .task-form select {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        .task-form button,
+        .refresh-button,
+        .assign-button,
+        .remove-button {
+            padding: 12px;
+            background: #1769aa;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .remove-button {
+            background: #d9534f;
+        }
+
+        #message {
+            margin: 12px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="manager-container">
+
+    <h1>Manager Dashboard</h1>
+    <p>Manage employees and assign tasks.</p>
+
+    <div class="dashboard-links">
+        <a href="employees.html">Employee Management</a>
+        <a href="task.html">Task Management</a>
+        <a href="employee-dashboard.html">Employee Dashboard</a>
+    </div>
+
+    <p id="message"></p>
+    <!-- My Assigned Employees -->
+<h2>My Assigned Employees</h2>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Designation</th>
+            </tr>
+        </thead>
+
+        <tbody id="myEmployeesTableBody"></tbody>
+    </table>
+</div>
+
+    <!-- Employee List -->
+    <h2>All Employees</h2>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Designation</th>
+                    <th>Manager ID</th>
+                </tr>
+            </thead>
+
+            <tbody id="employeeTable"></tbody>
+        </table>
+    </div>
+
+
+    <!-- Assign Employee to Manager -->
+    <h2>Assign Employee to Manager</h2>
+
+    <form class="task-form" id="managerAssignmentForm">
+
+        <select id="assignEmployeeId" required>
+            <option value="">Select Employee</option>
+        </select>
+
+        <select id="assignManagerId" required>
+            <option value="">Select Manager</option>
+            <option value="2">Manager (ID: 2)</option>
+            <option value="4">Test Manager (ID: 4)</option>
+        </select>
+
+        <button type="submit" class="assign-button">
+            Assign Employee
+        </button>
+
+    </form>
+
+
+    <!-- Remove Manager -->
+    <h2>Remove Manager from Employee</h2>
+
+    <form class="task-form" id="removeManagerForm">
+
+        <select id="removeEmployeeId" required>
+            <option value="">Select Employee</option>
+        </select>
+
+        <button type="submit" class="remove-button">
+            Remove Manager
+        </button>
+
+    </form>
+
+
+    <!-- Assign Task -->
+    <h2>Assign Task</h2>
+
+    <form class="task-form" id="taskForm">
+
+        <input id="title"
+               type="text"
+               placeholder="Task Title"
+               required>
+
+        <textarea id="description"
+                  placeholder="Task Description"
+                  required></textarea>
+
+        <select id="employeeId" required>
+            <option value="">Select Employee</option>
+        </select>
+
+        <button type="submit">
+            Assign Task
+        </button>
+
+    </form>
+
+
+    <!-- All Tasks -->
+    <h2>All Employee Tasks</h2>
+
+    <button type="button"
+            class="refresh-button"
+            onclick="loadTasks()">
+        Refresh Tasks
+    </button>
+
+    <div class="table-wrap">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Task ID</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Employee ID</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="taskTable">
+
+                <tr>
+                    <td colspan="6">
+                        Loading tasks...
+                    </td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    const employeeTable =
+        document.getElementById("employeeTable");
+
+    const taskTable =
+        document.getElementById("taskTable");
+
+    const employeeSelect =
+        document.getElementById("employeeId");
+
+    const assignEmployeeSelect =
+        document.getElementById("assignEmployeeId");
+
+    const removeEmployeeSelect =
+        document.getElementById("removeEmployeeId");
+
+    const message =
+        document.getElementById("message");
+
+    const form =
+        document.getElementById("taskForm");
+
+    const managerAssignmentForm =
+        document.getElementById("managerAssignmentForm");
+
+    const removeManagerForm =
+        document.getElementById("removeManagerForm");
+
+
+    // Load all employees
+    async function loadEmployees() {
+
+        const response =
+            await fetch("/api/tasks/my-tasks");
+
+        if (!response.ok) {
+            throw new Error("Could not load employees");
+        }
+
+        const employees =
+            await response.json();
+
+        employeeTable.innerHTML = "";
+
+        employeeSelect.innerHTML =
+            '<option value="">Select Employee</option>';
+
+        assignEmployeeSelect.innerHTML =
+            '<option value="">Select Employee</option>';
+
+        removeEmployeeSelect.innerHTML =
+            '<option value="">Select Employee</option>';
+
+
+        employees.forEach(emp => {
+
+            // Employee table
+            const row =
+                document.createElement("tr");
+
+            [
+                emp.id,
+                emp.name,
+                emp.email,
+                emp.department,
+                emp.designation,
+                emp.managerId ?? "Not Assigned"
+            ].forEach(value => {
+
+                const cell =
+                    document.createElement("td");
+
+                cell.textContent =
+                    value ?? "";
+
+                row.appendChild(cell);
+
+            });
+
+            employeeTable.appendChild(row);
+
+
+            // Task employee dropdown
+            const taskOption =
+                document.createElement("option");
+
+            taskOption.value =
+                emp.id;
+
+            taskOption.textContent =
+                emp.name + " (ID: " + emp.id + ")";
+
+            employeeSelect.appendChild(taskOption);
+
+
+            // Manager assignment dropdown
+            const assignOption =
+                document.createElement("option");
+
+            assignOption.value =
+                emp.id;
+
+            assignOption.textContent =
+                emp.name + " (ID: " + emp.id + ")";
+
+            assignEmployeeSelect.appendChild(
+                assignOption
+            );
+
+
+            // Remove manager dropdown
+            const removeOption =
+                document.createElement("option");
+
+            removeOption.value =
+                emp.id;
+
+            removeOption.textContent =
+                emp.name + " (ID: " + emp.id + ")";
+
+            removeEmployeeSelect.appendChild(
+                removeOption
+            );
+
+        });
+
+    }
+    async function loadMyEmployees() {
+
+    const response = await fetch("/api/employees/my-employees");
+
+    if (!response.ok) {
+        alert("Unable to load your employees");
+        return;
+    }
+
+    const employees = await response.json();
+
+    const tableBody = document.getElementById("myEmployeesTableBody");
+
+    tableBody.innerHTML = "";
+
+    employees.forEach(employee => {
+
+        const row = `
+            <tr>
+                <td>${employee.id}</td>
+                <td>${employee.name}</td>
+                <td>${employee.email}</td>
+                <td>${employee.department}</td>
+                <td>${employee.designation}</td>
+            </tr>
+        `;
+
+        tableBody.innerHTML += row;
+    });
+}
+   async function loadMyEmployeesForTask() {
+
+    const response =
+        await fetch("/api/employees/my-employees");
+
+    if (!response.ok) {
+        throw new Error("Could not load assigned employees");
+    }
+
+    const employees =
+        await response.json();
+
+    employeeSelect.innerHTML =
+        '<option value="">Select Employee</option>';
+
+    employees.forEach(emp => {
+
+        const option =
+            document.createElement("option");
+
+        option.value = emp.id;
+
+        option.textContent =
+            emp.name + " (ID: " + emp.id + ")";
+
+        employeeSelect.appendChild(option);
+    });
+}
+
+
+    // Assign employee to manager
+    managerAssignmentForm.addEventListener(
+        "submit",
+        async function(event) {
+
+            event.preventDefault();
+
+            const employeeId =
+                assignEmployeeSelect.value;
+
+            const managerId =
+                document.getElementById(
+                    "assignManagerId"
+                ).value;
+
+
+            if (!employeeId || !managerId) {
+                message.textContent =
+                    "Please select employee and manager.";
+
+                return;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/employees/"
+                        + employeeId
+                        + "/manager?managerId="
+                        + managerId,
+                        {
+                            method: "PUT"
+                        }
+                    );
+
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Could not assign manager"
+                    );
+                }
+
+
+                message.textContent =
+                    "Employee assigned to manager successfully!";
+
+
+                managerAssignmentForm.reset();
+
+                await loadEmployees();
+
+
+            } catch (error) {
+
+                message.textContent =
+                    error.message;
+
+            }
+
+        }
+    );
+
+
+    // Remove manager from employee
+    removeManagerForm.addEventListener(
+        "submit",
+        async function(event) {
+
+            event.preventDefault();
+
+            const employeeId =
+                removeEmployeeSelect.value;
+
+
+            if (!employeeId) {
+
+                message.textContent =
+                    "Please select an employee.";
+
+                return;
+
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/employees/"
+                        + employeeId
+                        + "/remove-manager",
+                        {
+                            method: "PUT"
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Could not remove manager"
+                    );
+
+                }
+
+
+                message.textContent =
+                    "Manager removed successfully!";
+
+
+                removeManagerForm.reset();
+
+                await loadEmployees();
+
+
+            } catch (error) {
+
+                message.textContent =
+                    error.message;
+
+            }
+
+        }
+    );
+
+
+    // Load all tasks
+    async function loadTasks() {
+
+        taskTable.innerHTML =
+            '<tr><td colspan="6">Loading tasks...</td></tr>';
+
+
+        try {
+
+            const response =
+                await fetch("/api/tasks/my-tasks");
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Could not load tasks"
+                );
+
+            }
+
+
+            const tasks =
+                await response.json();
+
+            taskTable.innerHTML = "";
+
+
+            if (tasks.length === 0) {
+
+                taskTable.innerHTML =
+                    '<tr><td colspan="6">No tasks found</td></tr>';
+
+                return;
+
+            }
+
+
+            tasks.forEach(task => {
+
+                const row =
+                    document.createElement("tr");
+
+
+                [
+                    task.id,
+                    task.title,
+                    task.description,
+                    task.employeeId,
+                    task.status
+                ].forEach(value => {
+
+                    const cell =
+                        document.createElement("td");
+
+                    cell.textContent =
+                        value ?? "";
+
+                    row.appendChild(cell);
+
+                });
+
+
+                // Status action
+                const actionCell =
+                    document.createElement("td");
+
+
+                const select =
+                    document.createElement("select");
+
+                select.id =
+                    "status-" + task.id;
+
+
+                [
+                    "PENDING",
+                    "IN_PROGRESS",
+                    "COMPLETED"
+                ].forEach(status => {
+
+                    const option =
+                        document.createElement("option");
+
+                    option.value =
+                        status;
+
+                    option.textContent =
+                        status;
+
+
+                    if (status === task.status) {
+                        option.selected = true;
+                    }
+
+
+                    select.appendChild(option);
+
+                });
+
+
+                const button =
+                    document.createElement("button");
+
+                button.textContent =
+                    "Update";
+
+                button.type =
+                    "button";
+
+
+                button.style.marginLeft =
+                    "8px";
+
+                button.style.padding =
+                    "8px";
+
+                button.style.background =
+                    "#1769aa";
+
+                button.style.color =
+                    "white";
+
+                button.style.border =
+                    "none";
+
+                button.style.borderRadius =
+                    "4px";
+
+                button.style.cursor =
+                    "pointer";
+
+
+                button.addEventListener(
+                    "click",
+                    () => {
+                        updateTaskStatus(
+                            task.id,
+                            select.value
+                        );
+                    }
+                );
+
+
+                actionCell.appendChild(select);
+
+                actionCell.appendChild(button);
+
+                row.appendChild(actionCell);
+
+                taskTable.appendChild(row);
+
+            });
+
+
+        } catch (error) {
+
+            taskTable.innerHTML =
+                '<tr><td colspan="6">Error loading tasks</td></tr>';
+
+            message.textContent =
+                error.message;
+
+        }
+
+    }
+
+
+    // Update task status
+    async function updateTaskStatus(
+        taskId,
+        status
+    ) {
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/tasks/"
+                    + taskId
+                    + "/status",
+                    {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+                        body: JSON.stringify({
+                            status: status
+                        })
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Could not update task status"
+                );
+
+            }
+
+
+            message.textContent =
+                "Task status updated successfully!";
+
+
+            await loadTasks();
+
+
+        } catch (error) {
+
+            message.textContent =
+                error.message;
+
+        }
+
+    }
+
+
+    // Assign a new task
+    form.addEventListener(
+        "submit",
+        async function(event) {
+
+            event.preventDefault();
+
+
+            const task = {
+
+                title:
+                    document
+                        .getElementById("title")
+                        .value
+                        .trim(),
+
+                description:
+                    document
+                        .getElementById("description")
+                        .value
+                        .trim(),
+
+                employeeId:
+                    Number(employeeSelect.value),
+
+                status:
+                    "PENDING"
+
+            };
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/tasks",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+                            body:
+                                JSON.stringify(task)
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Could not assign task"
+                    );
+
+                }
+
+
+                message.textContent =
+                    "Task assigned successfully!";
+
+
+                form.reset();
+
+                await loadTasks();
+
+
+            } catch (error) {
+
+                message.textContent =
+                    error.message;
+
+            }
+
+        }
+    );
+
+
+    // Load dashboard data
+    async function init() {
+
+        try {
+
+            await loadEmployees();
+
+            await loadMyEmployees();
+
+            await loadMyEmployeesForTask();
+
+            await loadTasks();
+
+        } catch (error) {
+
+            message.textContent =
+                error.message;
+
+        }
+
+    }
+
+
+    init();
+
+</script>
+
+</body>
+</html>
